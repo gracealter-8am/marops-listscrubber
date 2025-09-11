@@ -297,74 +297,92 @@
             // Step 2
             if (step === 2) {
                 return h('div', { className: "max-w-4xl mx-auto p-6 bg-white" }, [
-                    h('h2', { key: "title", className: "text-xl font-semibold mb-6" }, "Step 2: Column Mapping"),
-                    
-                    h('div', { key: "mapping", className: "grid grid-cols-2 gap-4" }, [
-                        h('div', { key: "firstname" }, [
-                            h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "First Name Column *"),
-                            h('select', {
-                                key: "select",
-                                value: columnMappings.firstName || '',
-                                onChange: (e) => setColumnMappings({...columnMappings, firstName: e.target.value}),
-                                className: "w-full px-3 py-2 border border-gray-300 rounded-md"
-                            }, [
-                                h('option', { key: "default", value: "" }, "Select column"),
-                                ...headers.map(header => h('option', { key: header, value: header }, header))
-                            ])
-                        ]),
-                        
-                        h('div', { key: "lastname" }, [
-                            h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Last Name Column *"),
-                            h('select', {
-                                key: "select",
-                                value: columnMappings.lastName || '',
-                                onChange: (e) => setColumnMappings({...columnMappings, lastName: e.target.value}),
-                                className: "w-full px-3 py-2 border border-gray-300 rounded-md"
-                            }, [
-                                h('option', { key: "default", value: "" }, "Select column"),
-                                ...headers.map(header => h('option', { key: header, value: header }, header))
-                            ])
-                        ]),
-                        
-                        h('div', { key: "company" }, [
-                            h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Company Column *"),
-                            h('select', {
-                                key: "select",
-                                value: columnMappings.company || '',
-                                onChange: (e) => setColumnMappings({...columnMappings, company: e.target.value}),
-                                className: "w-full px-3 py-2 border border-gray-300 rounded-md"
-                            }, [
-                                h('option', { key: "default", value: "" }, "Select column"),
-                                ...headers.map(header => h('option', { key: header, value: header }, header))
-                            ])
-                        ]),
-                        
-                        h('div', { key: "email" }, [
-                            h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Email Column"),
-                            h('select', {
-                                key: "select",
-                                value: columnMappings.email || '',
-                                onChange: (e) => setColumnMappings({...columnMappings, email: e.target.value}),
-                                className: "w-full px-3 py-2 border border-gray-300 rounded-md"
-                            }, [
-                                h('option', { key: "default", value: "" }, "Select column"),
-                                ...headers.map(header => h('option', { key: header, value: header }, header))
-                            ])
-                        ])
+                    h('div', { key: "header", className: "mb-8 text-center border-b border-gray-200 pb-6" }, [
+                        h('h1', { key: "title", className: "text-3xl font-bold text-gray-900 mb-2" }, "Lead List Processor"),
+                        h('p', { key: "subtitle", className: "text-gray-600" }, "Clean and process your lead lists with precision")
                     ]),
 
-                    h('div', { key: "buttons", className: "flex space-x-4 mt-6" }, [
-                        h('button', {
-                            key: "continue",
-                            onClick: () => setStep(3),
-                            disabled: !validateRequiredColumns(),
-                            className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400"
-                        }, "Continue to Processing"),
-                        h('button', {
-                            key: "back",
-                            onClick: () => setStep(1),
-                            className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
-                        }, "Back")
+                    h('div', { key: "progress", className: "mb-8 flex items-center justify-center space-x-4" }, 
+                        [1, 2, 3, 4, 5].map(i => 
+                            h('div', { key: i, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 ${i <= step ? 'border-orange-600 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-400'}` }, i)
+                        )
+                    ),
+
+                    h('div', { key: "content", className: "space-y-6" }, [
+                        h('h2', { key: "title", className: "text-xl font-semibold" }, "Step 2: Column Identification"),
+                        
+                        h('div', { key: "warning", className: "bg-yellow-50 border border-yellow-200 rounded-md p-4" }, [
+                            h('h3', { key: "title", className: "text-sm font-medium text-yellow-800" }, "Required Columns"),
+                            h('p', { key: "text", className: "text-sm text-yellow-700" }, "First Name, Last Name, and Company are required to process the list.")
+                        ]),
+
+                        h('div', { key: "mapping", className: "grid grid-cols-2 gap-4" }, [
+                            h('div', { key: "firstname" }, [
+                                h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "First Name Column *"),
+                                h('select', {
+                                    key: "select",
+                                    value: columnMappings.firstName || '',
+                                    onChange: (e) => setColumnMappings({...columnMappings, firstName: e.target.value}),
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md"
+                                }, [
+                                    h('option', { key: "default", value: "" }, "Select column"),
+                                    ...headers.map(header => h('option', { key: header, value: header }, header))
+                                ])
+                            ]),
+                            
+                            h('div', { key: "lastname" }, [
+                                h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Last Name Column *"),
+                                h('select', {
+                                    key: "select",
+                                    value: columnMappings.lastName || '',
+                                    onChange: (e) => setColumnMappings({...columnMappings, lastName: e.target.value}),
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md"
+                                }, [
+                                    h('option', { key: "default", value: "" }, "Select column"),
+                                    ...headers.map(header => h('option', { key: header, value: header }, header))
+                                ])
+                            ]),
+                            
+                            h('div', { key: "company" }, [
+                                h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Company Column *"),
+                                h('select', {
+                                    key: "select",
+                                    value: columnMappings.company || '',
+                                    onChange: (e) => setColumnMappings({...columnMappings, company: e.target.value}),
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md"
+                                }, [
+                                    h('option', { key: "default", value: "" }, "Select column"),
+                                    ...headers.map(header => h('option', { key: header, value: header }, header))
+                                ])
+                            ]),
+                            
+                            h('div', { key: "email" }, [
+                                h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Email Column"),
+                                h('select', {
+                                    key: "select",
+                                    value: columnMappings.email || '',
+                                    onChange: (e) => setColumnMappings({...columnMappings, email: e.target.value}),
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md"
+                                }, [
+                                    h('option', { key: "default", value: "" }, "Select column"),
+                                    ...headers.map(header => h('option', { key: header, value: header }, header))
+                                ])
+                            ])
+                        ]),
+
+                        h('div', { key: "buttons", className: "flex space-x-4" }, [
+                            h('button', {
+                                key: "continue",
+                                onClick: () => setStep(3),
+                                disabled: !validateRequiredColumns(),
+                                className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400"
+                            }, "Continue to Processing"),
+                            h('button', {
+                                key: "back",
+                                onClick: () => setStep(1),
+                                className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
+                            }, "Back")
+                        ])
                     ])
                 ]);
             }
@@ -372,19 +390,40 @@
             // Step 3
             if (step === 3) {
                 return h('div', { className: "max-w-4xl mx-auto p-6 bg-white" }, [
-                    h('h2', { key: "title", className: "text-xl font-semibold mb-6" }, "Step 3: Ready to Process"),
-                    h('p', { key: "summary", className: "mb-6" }, `Ready to process ${rawData.length} rows from ${listName}`),
-                    h('div', { key: "buttons", className: "flex space-x-4" }, [
-                        h('button', {
-                            key: "process",
-                            onClick: processData,
-                            className: "px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
-                        }, "Process List"),
-                        h('button', {
-                            key: "back",
-                            onClick: () => setStep(2),
-                            className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
-                        }, "Back")
+                    h('div', { key: "header", className: "mb-8 text-center border-b border-gray-200 pb-6" }, [
+                        h('h1', { key: "title", className: "text-3xl font-bold text-gray-900 mb-2" }, "Lead List Processor"),
+                        h('p', { key: "subtitle", className: "text-gray-600" }, "Clean and process your lead lists with precision")
+                    ]),
+
+                    h('div', { key: "progress", className: "mb-8 flex items-center justify-center space-x-4" }, 
+                        [1, 2, 3, 4, 5].map(i => 
+                            h('div', { key: i, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 ${i <= step ? 'border-orange-600 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-400'}` }, i)
+                        )
+                    ),
+
+                    h('div', { key: "content", className: "space-y-6" }, [
+                        h('h2', { key: "title", className: "text-xl font-semibold" }, "Step 3: Ready to Process"),
+                        
+                        h('div', { key: "summary", className: "bg-teal-50 border border-teal-200 rounded-md p-4" }, [
+                            h('h3', { key: "title", className: "font-medium text-teal-900 mb-2" }, "Processing Summary"),
+                            h('p', { key: "list", className: "text-teal-800" }, h('strong', {}, "List: "), listName),
+                            associatedBrands.length > 0 && h('p', { key: "brands", className: "text-teal-800" }, h('strong', {}, "Brands: "), associatedBrands.join(', ')),
+                            h('p', { key: "rows", className: "text-teal-800" }, h('strong', {}, "Total Rows: "), rawData.length),
+                            h('p', { key: "categories", className: "text-teal-800" }, h('strong', {}, "Categories to Remove: "), categoriesToRemove.length > 0 ? categoriesToRemove.join(', ') : 'None')
+                        ]),
+
+                        h('div', { key: "buttons", className: "flex space-x-4" }, [
+                            h('button', {
+                                key: "process",
+                                onClick: processData,
+                                className: "px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+                            }, "Process List"),
+                            h('button', {
+                                key: "back",
+                                onClick: () => setStep(2),
+                                className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
+                            }, "Back")
+                        ])
                     ])
                 ]);
             }
@@ -395,28 +434,55 @@
                 const failCount = processedData.filter(row => row['Result'] === 'FAIL').length;
                 
                 return h('div', { className: "max-w-4xl mx-auto p-6 bg-white" }, [
-                    h('h2', { key: "title", className: "text-xl font-semibold mb-6" }, "Step 4: Processing Results"),
-                    h('div', { key: "stats", className: "grid grid-cols-2 gap-4 mb-6" }, [
-                        h('div', { key: "clean", className: "bg-emerald-50 border border-emerald-200 rounded-md p-4" }, [
-                            h('h3', { key: "title", className: "font-medium text-emerald-900" }, "Clean Leads"),
-                            h('p', { key: "count", className: "text-2xl font-bold text-emerald-600" }, cleanCount)
-                        ]),
-                        h('div', { key: "failed", className: "bg-red-50 border border-red-200 rounded-md p-4" }, [
-                            h('h3', { key: "title", className: "font-medium text-red-900" }, "Failed Leads"),
-                            h('p', { key: "count", className: "text-2xl font-bold text-red-600" }, failCount)
-                        ])
+                    h('div', { key: "header", className: "mb-8 text-center border-b border-gray-200 pb-6" }, [
+                        h('h1', { key: "title", className: "text-3xl font-bold text-gray-900 mb-2" }, "Lead List Processor"),
+                        h('p', { key: "subtitle", className: "text-gray-600" }, "Clean and process your lead lists with precision")
                     ]),
-                    h('div', { key: "buttons", className: "flex space-x-4" }, [
-                        h('button', {
-                            key: "generate",
-                            onClick: confirmProcessing,
-                            className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-                        }, "Generate CSV Output"),
-                        h('button', {
-                            key: "back",
-                            onClick: () => setStep(3),
-                            className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
-                        }, "Back")
+
+                    h('div', { key: "progress", className: "mb-8 flex items-center justify-center space-x-4" }, 
+                        [1, 2, 3, 4, 5].map(i => 
+                            h('div', { key: i, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 ${i <= step ? 'border-orange-600 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-400'}` }, i)
+                        )
+                    ),
+
+                    h('div', { key: "content", className: "space-y-6" }, [
+                        h('h2', { key: "title", className: "text-xl font-semibold" }, "Processing Results"),
+                        
+                        h('div', { key: "stats", className: "grid grid-cols-2 gap-4" }, [
+                            h('div', { key: "clean", className: "bg-emerald-50 border border-emerald-200 rounded-md p-4" }, [
+                                h('h3', { key: "title", className: "font-medium text-emerald-900" }, "Clean Leads"),
+                                h('p', { key: "count", className: "text-2xl font-bold text-emerald-600" }, cleanCount)
+                            ]),
+                            h('div', { key: "failed", className: "bg-red-50 border border-red-200 rounded-md p-4" }, [
+                                h('h3', { key: "title", className: "font-medium text-red-900" }, "Failed Leads"),
+                                h('p', { key: "count", className: "text-2xl font-bold text-red-600" }, failCount)
+                            ])
+                        ]),
+
+                        h('div', { key: "breakdown", className: "bg-gray-50 border border-gray-200 rounded-md p-4" }, [
+                            h('h3', { key: "title", className: "font-medium text-gray-900 mb-2" }, "Failure Breakdown"),
+                            h('div', { key: "reasons", className: "space-y-1" },
+                                Object.entries(failSummary).map(([reason, count]) =>
+                                    h('p', { key: reason, className: "text-sm text-gray-700" }, [
+                                        h('span', { key: "reason", className: "font-medium" }, reason, ":"),
+                                        ` ${count} leads`
+                                    ])
+                                )
+                            )
+                        ]),
+
+                        h('div', { key: "buttons", className: "flex space-x-4" }, [
+                            h('button', {
+                                key: "generate",
+                                onClick: confirmProcessing,
+                                className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                            }, "Generate CSV Output"),
+                            h('button', {
+                                key: "back",
+                                onClick: () => setStep(3),
+                                className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
+                            }, "Back")
+                        ])
                     ])
                 ]);
             }
@@ -424,40 +490,69 @@
             // Step 5
             if (step === 5) {
                 return h('div', { className: "max-w-4xl mx-auto p-6 bg-white" }, [
-                    h('h2', { key: "title", className: "text-xl font-semibold mb-6" }, "Step 5: Download CSV"),
-                    h('div', { key: "complete", className: "bg-emerald-50 border border-emerald-200 rounded-md p-4 mb-6" }, [
-                        h('span', { key: "text", className: "font-medium text-emerald-900" }, "Processing Complete!")
+                    h('div', { key: "header", className: "mb-8 text-center border-b border-gray-200 pb-6" }, [
+                        h('h1', { key: "title", className: "text-3xl font-bold text-gray-900 mb-2" }, "Lead List Processor"),
+                        h('p', { key: "subtitle", className: "text-gray-600" }, "Clean and process your lead lists with precision")
                     ]),
-                    h('div', { key: "output" }, [
-                        h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Processed CSV Output"),
-                        h('textarea', {
-                            key: "textarea",
-                            value: finalOutput,
-                            readOnly: true,
-                            className: "w-full h-64 px-3 py-2 border border-gray-300 rounded-md font-mono text-xs bg-gray-50"
-                        })
-                    ]),
-                    h('div', { key: "buttons", className: "flex space-x-4 mt-6" }, [
-                        h('button', {
-                            key: "download",
-                            onClick: () => {
-                                const blob = new Blob([finalOutput], { type: 'text/csv' });
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `${listName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_processed.csv`;
-                                document.body.appendChild(a);
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                            },
-                            className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-                        }, "Download CSV"),
-                        h('button', {
-                            key: "reset",
-                            onClick: resetTool,
-                            className: "px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
-                        }, "Process Another List")
+
+                    h('div', { key: "progress", className: "mb-8 flex items-center justify-center space-x-4" }, 
+                        [1, 2, 3, 4, 5].map(i => 
+                            h('div', { key: i, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 ${i <= step ? 'border-orange-600 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-400'}` }, i)
+                        )
+                    ),
+
+                    h('div', { key: "content", className: "space-y-6" }, [
+                        h('h2', { key: "title", className: "text-xl font-semibold" }, "Step 5: CSV Output"),
+                        
+                        h('div', { key: "complete", className: "bg-emerald-50 border border-emerald-200 rounded-md p-4" }, [
+                            h('div', { key: "header", className: "flex items-center" }, [
+                                h('svg', { key: "icon", className: "h-5 w-5 text-emerald-500 mr-2", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" }, 
+                                    h('path', { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })
+                                ),
+                                h('span', { key: "text", className: "font-medium text-emerald-900" }, "Processing Complete")
+                            ]),
+                            h('p', { key: "summary", className: "text-emerald-700 mt-1" },
+                                `${processedData.length} total rows processed • ${processedData.filter(row => row['Result'] !== 'FAIL').length} clean • ${processedData.filter(row => row['Result'] === 'FAIL').length} marked as FAIL`
+                            )
+                        ]),
+
+                        h('div', { key: "output" }, [
+                            h('label', { key: "label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Processed Lead List (CSV Format)"),
+                            h('textarea', {
+                                key: "textarea",
+                                value: finalOutput,
+                                readOnly: true,
+                                className: "w-full h-64 px-3 py-2 border border-gray-300 rounded-md font-mono text-xs bg-gray-50"
+                            })
+                        ]),
+
+                        h('div', { key: "buttons", className: "flex space-x-4" }, [
+                            h('button', {
+                                key: "download",
+                                onClick: () => {
+                                    const blob = new Blob([finalOutput], { type: 'text/csv' });
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${listName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_processed.csv`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                },
+                                className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center space-x-2"
+                            }, [
+                                h('svg', { key: "icon", className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" },
+                                    h('path', { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" })
+                                ),
+                                h('span', { key: "text" }, "Download CSV")
+                            ]),
+                            h('button', {
+                                key: "reset",
+                                onClick: resetTool,
+                                className: "px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+                            }, "Process Another List")
+                        ])
                     ])
                 ]);
             }
