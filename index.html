@@ -29,6 +29,8 @@
             const [categoriesToRemove, setCategoriesToRemove] = useState([]);
             const [additionalKeywords, setAdditionalKeywords] = useState('');
             const [finalOutput, setFinalOutput] = useState('');
+            const [excludeAccounting, setExcludeAccounting] = useState(false);
+            const [excludeLegal, setExcludeLegal] = useState(false);
 
             const handleFileUpload = useCallback((event) => {
                 const file = event.target.files[0];
@@ -199,6 +201,8 @@
                 setCategoriesToRemove([]);
                 setAdditionalKeywords('');
                 setFinalOutput('');
+                setExcludeAccounting(false);
+                setExcludeLegal(false);
             };
 
             // Step 1
@@ -218,11 +222,65 @@
                     h('div', { key: "content", className: "space-y-6" }, [
                         h('h2', { key: "title", className: "text-xl font-semibold" }, "Step 1: List Details"),
                         
-                        h('div', { key: "info", className: "bg-blue-50 border border-blue-200 rounded-md p-4" }, [
-                            h('h3', { key: "h3", className: "font-medium text-blue-900 mb-2" }, "How We'll Clean Up Your List"),
-                            h('div', { key: "content", className: "text-blue-800 text-sm" }, 
-                                "Upload your CSV/Excel file and we'll clean it for Marketo/Salesforce import."
-                            )
+                        h('div', { key: "info", className: "bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6" }, [
+                            h('h3', { key: "h3", className: "text-lg font-semibold text-blue-900 mb-2" }, "How This Tool Works"),
+                            h('p', { key: "desc", className: "text-blue-800 mb-3" }, 
+                                "Upload your CSV or Excel file, and this tool will automatically clean and validate your lead data. It removes duplicates, validates email addresses, and filters out unmarketable leads."
+                            ),
+                            h('ul', { key: "list", className: "text-blue-800 text-sm list-disc list-inside space-y-1" }, [
+                                h('li', { key: "1" }, "Automatically detects column headers (first name, last name, company, email, phone)"),
+                                h('li', { key: "2" }, "Validates email addresses and removes invalid formats"),
+                                h('li', { key: "3" }, "Filters out government domains (.gov, .edu, .mil, .org)"),
+                                h('li', { key: "4" }, "Removes companies based on industry type and keywords"),
+                                h('li', { key: "5" }, "Exports clean, marketable leads ready for outreach")
+                            ])
+                        ]),
+
+                        h('div', { key: "exclusions", className: "bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6" }, [
+                            h('h3', { key: "h3", className: "text-lg font-semibold text-gray-900 mb-4" }, "Exclusion Settings"),
+                            
+                            h('div', { key: "industry", className: "mb-4" }, [
+                                h('h4', { key: "h4", className: "font-medium text-gray-700 mb-2" }, "Industry Exclusions:"),
+                                h('div', { key: "checkboxes", className: "flex flex-wrap gap-4" }, [
+                                    h('label', { key: "accounting", className: "flex items-center" }, [
+                                        h('input', {
+                                            key: "checkbox",
+                                            type: "checkbox",
+                                            checked: excludeAccounting,
+                                            onChange: (e) => setExcludeAccounting(e.target.checked),
+                                            className: "mr-2"
+                                        }),
+                                        h('span', { key: "text", className: "text-sm" }, "Exclude Accounting/Finance")
+                                    ]),
+                                    h('label', { key: "legal", className: "flex items-center" }, [
+                                        h('input', {
+                                            key: "checkbox",
+                                            type: "checkbox", 
+                                            checked: excludeLegal,
+                                            onChange: (e) => setExcludeLegal(e.target.checked),
+                                            className: "mr-2"
+                                        }),
+                                        h('span', { key: "text", className: "text-sm" }, "Exclude Law/Legal")
+                                    ])
+                                ])
+                            ]),
+
+                            h('div', { key: "keywords" }, [
+                                h('label', { key: "label", className: "block font-medium text-gray-700 mb-2" }, 
+                                    "Additional Keywords to Exclude:"
+                                ),
+                                h('input', {
+                                    key: "input",
+                                    type: "text",
+                                    value: additionalKeywords,
+                                    onChange: (e) => setAdditionalKeywords(e.target.value),
+                                    placeholder: "Enter keywords separated by commas (e.g., consulting, government, medical)",
+                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                }),
+                                h('p', { key: "help", className: "text-xs text-gray-500 mt-1" }, 
+                                    "Companies containing these keywords in their name will be filtered out"
+                                )
+                            ])
                         ]),
                         
                         h('div', { key: "listname" }, [
