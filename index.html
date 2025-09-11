@@ -86,7 +86,6 @@
                             }
                         });
                         setColumnMappings(mappings);
-                        setStep(2);
                     } catch (error) {
                         alert('Error parsing file: ' + error.message);
                     }
@@ -110,15 +109,67 @@
                     return;
                 }
 
-                // Simple processing for demo
-                const processed = rawData.map(row => ({
-                    ...row,
-                    'Result': Math.random() > 0.3 ? '' : 'FAIL',
-                    'Fail Reason': Math.random() > 0.3 ? '' : 'unmarketable email domain'
-                }));
+                const failReasons = {};
+                
+                // Define keywords for each category
+                const categoryKeywords = {
+                    accounting: ['accounting', 'accountant', 'cpa', 'audit', 'auditor', 'bookkeeping', 'tax prep', 'financial advisor', 'finance firm', 'bank', 'banking', 'credit union'],
+                    law: ['law', 'legal', 'attorney', 'lawyer', 'law firm', 'legal services', 'paralegal', 'counsel', 'solicitor', 'barrister']
+                };
+
+                // Parse additional keywords
+                const additionalKeywordsList = additionalKeywords
+                    .toLowerCase()
+                    .split(',')
+                    .map(k => k.trim())
+                    .filter(k => k.length > 0);
+
+                const processed = rawData.map(row => {
+                    const companyName = (row[columnMappings.company] || '').toLowerCase();
+                    const jobTitle = '';  // Add job title mapping if available
+                    const searchText = `${companyName} ${jobTitle}`.toLowerCase();
+                    
+                    let failReason = '';
+                    
+                    // Check category exclusions
+                    if (categoriesToRemove.includes('accounting')) {
+                        if (categoryKeywords.accounting.some(keyword => searchText.includes(keyword))) {
+                            failReason = 'accounting/finance category';
+                        }
+                    }
+                    
+                    if (categoriesToRemove.includes('law')) {
+                        if (categoryKeywords.law.some(keyword => searchText.includes(keyword))) {
+                            failReason = 'law/legal category';
+                        }
+                    }
+                    
+                    // Check additional keywords
+                    if (!failReason && additionalKeywordsList.length > 0) {
+                        if (additionalKeywordsList.some(keyword => searchText.includes(keyword))) {
+                            failReason = 'additional keyword exclusion';
+                        }
+                    }
+                    
+                    // Random demo failures for other reasons
+                    if (!failReason && Math.random() > 0.7) {
+                        failReason = 'unmarketable email domain';
+                    }
+                    
+                    // Count fail reasons
+                    if (failReason) {
+                        failReasons[failReason] = (failReasons[failReason] || 0) + 1;
+                    }
+                    
+                    return {
+                        ...row,
+                        'Result': failReason ? 'FAIL' : '',
+                        'Fail Reason': failReason || ''
+                    };
+                });
                 
                 setProcessedData(processed);
-                setFailSummary({ 'unmarketable email domain': Math.floor(processed.length * 0.3) });
+                setFailSummary(failReasons);
                 setStep(4);
             };
 
@@ -301,6 +352,15 @@
                                 }, (!listName || associatedBrands.length === 0) ? 'Complete required fields above to upload' : 'Click to upload file'),
                                 uploadedFile && h('p', { key: "filename", className: "mt-2 text-sm text-gray-600" }, `Uploaded: ${uploadedFile.name}`)
                             ])
+                        ]),
+
+                        h('div', { key: "buttons", className: "flex space-x-4" }, [
+                            h('button', {
+                                key: "continue",
+                                onClick: () => setStep(2),
+                                disabled: !listName || associatedBrands.length === 0 || !uploadedFile,
+                                className: "px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            }, "Continue to Column Mapping")
                         ])
                     ])
                 ]);
