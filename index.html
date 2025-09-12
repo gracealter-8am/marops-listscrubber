@@ -58,14 +58,21 @@
                             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                             
                             if (jsonData.length > 0) {
-                                parsedHeaders = jsonData[0].map(h => String(h || '').trim());
-                                data = jsonData.slice(1).map(row => {
+                                const newHeaders = [];
+                                for (let i = 0; i < jsonData[0].length; i++) {
+                                    newHeaders.push(String(jsonData[0][i] || '').trim());
+                                }
+                                parsedHeaders = newHeaders;
+                                
+                                const newData = [];
+                                for (let i = 1; i < jsonData.length; i++) {
                                     const obj = {};
-                                    parsedHeaders.forEach((header, index) => {
-                                        obj[header] = row[index] || '';
-                                    });
-                                    return obj;
-                                });
+                                    for (let j = 0; j < parsedHeaders.length; j++) {
+                                        obj[parsedHeaders[j]] = jsonData[i][j] || '';
+                                    }
+                                    newData.push(obj);
+                                }
+                                data = newData;
                             }
                         }
 
@@ -73,18 +80,20 @@
                         setHeaders(parsedHeaders);
                         
                         const mappings = {};
-                        parsedHeaders.forEach(header => {
-                            const lowerHeader = header.toLowerCase();
-                            if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
+                        for (let i = 0; i < parsedHeaders.length; i++) {
+                            const header = parsedHeaders[i];
+                            const headerStr = String(header || '');
+                            const lowerHeader = headerStr.toLowerCase();
+                            if (lowerHeader.indexOf('first') !== -1 && (lowerHeader.indexOf('name') !== -1 || lowerHeader === 'first_name')) {
                                 mappings.firstName = header;
-                            } else if (lowerHeader.includes('last') && lowerHeader.includes('name')) {
+                            } else if (lowerHeader.indexOf('last') !== -1 && (lowerHeader.indexOf('name') !== -1 || lowerHeader === 'last_name')) {
                                 mappings.lastName = header;
-                            } else if (lowerHeader.includes('company')) {
+                            } else if (lowerHeader.indexOf('company') !== -1 || lowerHeader === 'company_name') {
                                 mappings.company = header;
-                            } else if (lowerHeader.includes('email')) {
+                            } else if (lowerHeader.indexOf('email') !== -1) {
                                 mappings.email = header;
                             }
-                        });
+                        }
                         setColumnMappings(mappings);
                     } catch (error) {
                         alert('Error parsing file: ' + error.message);
@@ -109,84 +118,163 @@
                     return;
                 }
 
-                const failReasons = {};
-                
-                // Define keywords for each category
-                const categoryKeywords = {
-                    accounting: ['accounting', 'accountant', 'cpa', 'audit', 'auditor', 'bookkeeping', 'tax prep', 'financial advisor', 'finance firm', 'bank', 'banking', 'credit union'],
-                    law: ['law', 'legal', 'attorney', 'lawyer', 'law firm', 'legal services', 'paralegal', 'counsel', 'solicitor', 'barrister']
-                };
-
-                // Parse additional keywords
-                const additionalKeywordsList = additionalKeywords
-                    .toLowerCase()
-                    .split(',')
-                    .map(k => k.trim())
-                    .filter(k => k.length > 0);
-
-                const processed = rawData.map(row => {
-                    const companyName = (row[columnMappings.company] || '').toLowerCase();
-                    const jobTitle = '';  // Add job title mapping if available
-                    const searchText = `${companyName} ${jobTitle}`.toLowerCase();
+                try {
+                    console.log('Starting data processing...');
                     
-                    let failReason = '';
+                    const failReasons = {};
                     
-                    // Check category exclusions
-                    if (categoriesToRemove.includes('accounting')) {
-                        if (categoryKeywords.accounting.some(keyword => searchText.includes(keyword))) {
-                            failReason = 'accounting/finance category';
-                        }
-                    }
-                    
-                    if (categoriesToRemove.includes('law')) {
-                        if (categoryKeywords.law.some(keyword => searchText.includes(keyword))) {
-                            failReason = 'law/legal category';
-                        }
-                    }
-                    
-                    // Check additional keywords
-                    if (!failReason && additionalKeywordsList.length > 0) {
-                        if (additionalKeywordsList.some(keyword => searchText.includes(keyword))) {
-                            failReason = 'additional keyword exclusion';
-                        }
-                    }
-                    
-                    // Random demo failures for other reasons
-                    if (!failReason && Math.random() > 0.7) {
-                        failReason = 'unmarketable email domain';
-                    }
-                    
-                    // Count fail reasons
-                    if (failReason) {
-                        failReasons[failReason] = (failReasons[failReason] || 0) + 1;
-                    }
-                    
-                    return {
-                        ...row,
-                        'Result': failReason ? 'FAIL' : '',
-                        'Fail Reason': failReason || ''
+                    // Define keywords for each category
+                    const categoryKeywords = {
+                        accounting: ['accounting', 'accountant', 'cpa', 'audit', 'auditor', 'bookkeeping', 'tax prep', 'financial advisor', 'finance firm', 'bank', 'banking', 'credit union', 'financial services', 'tax service', 'payroll'],
+                        law: ['law', 'legal', 'attorney', 'lawyer', 'law firm', 'legal services', 'paralegal', 'counsel', 'solicitor', 'barrister', 'litigation', 'legal aid']
                     };
-                });
-                
-                setProcessedData(processed);
-                setFailSummary(failReasons);
-                setStep(4);
+
+                    // Parse additional keywords - SAFE VERSION
+                    const additionalKeywordsList = [];
+                    if (additionalKeywords) {
+                        const keywordParts = additionalKeywords.toLowerCase().split(',');
+                        for (let i = 0; i < keywordParts.length; i++) {
+                            const keyword = keywordParts[i];
+                            // Manual trim function
+                            let trimmed = keyword;
+                            while (trimmed.length > 0 && (trimmed[0] === ' ' || trimmed[0] === '\t')) {
+                                trimmed = trimmed.substring(1);
+                            }
+                            while (trimmed.length > 0 && (trimmed[trimmed.length - 1] === ' ' || trimmed[trimmed.length - 1] === '\t')) {
+                                trimmed = trimmed.substring(0, trimmed.length - 1);
+                            }
+                            if (trimmed.length > 0) {
+                                additionalKeywordsList.push(trimmed);
+                            }
+                        }
+                    }
+
+                    const processed = [];
+                    for (let i = 0; i < rawData.length; i++) {
+                        const row = rawData[i];
+                        const companyName = (row[columnMappings.company] || '').toString().toLowerCase();
+                        const searchText = companyName;
+                        
+                        let failReason = '';
+                        
+                        // Check category exclusions
+                        if (categoriesToRemove.indexOf('accounting') !== -1) {
+                            for (let j = 0; j < categoryKeywords.accounting.length; j++) {
+                                if (searchText.indexOf(categoryKeywords.accounting[j]) !== -1) {
+                                    failReason = 'accounting/finance category';
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (categoriesToRemove.indexOf('law') !== -1) {
+                            for (let j = 0; j < categoryKeywords.law.length; j++) {
+                                if (searchText.indexOf(categoryKeywords.law[j]) !== -1) {
+                                    failReason = 'law/legal category';
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Check additional keywords
+                        if (!failReason && additionalKeywordsList.length > 0) {
+                            for (let j = 0; j < additionalKeywordsList.length; j++) {
+                                if (searchText.indexOf(additionalKeywordsList[j]) !== -1) {
+                                    failReason = 'additional keyword exclusion';
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Random demo failures for other reasons (like unmarketable domains)
+                        if (!failReason && Math.random() > 0.7) {
+                            failReason = 'unmarketable email domain';
+                        }
+                        
+                        // Count fail reasons
+                        if (failReason) {
+                            failReasons[failReason] = (failReasons[failReason] || 0) + 1;
+                        }
+                        
+                        processed.push({
+                            ...row,
+                            'Result': failReason ? 'FAIL' : '',
+                            'Fail Reason': failReason || ''
+                        });
+                    }
+                    
+                    setProcessedData(processed);
+                    setFailSummary(failReasons);
+                    setStep(4);
+                    console.log('Processing completed successfully');
+                } catch (error) {
+                    console.error('Error in processData:', error);
+                    alert('Error processing data: ' + error.message);
+                }
             };
 
             const confirmProcessing = () => {
-                const headers = Object.keys(processedData[0] || {});
-                const csvRows = [headers.join(',')];
-                
-                processedData.forEach(row => {
-                    const values = headers.map(header => {
-                        const value = row[header] || '';
-                        return value.includes(',') ? `"${value}"` : value;
-                    });
-                    csvRows.push(values.join(','));
-                });
-                
-                setFinalOutput(csvRows.join('\n'));
-                setStep(5);
+                try {
+                    console.log('Starting CSV generation - SAFE VERSION');
+                    
+                    if (!processedData || processedData.length === 0) {
+                        alert('No data to process');
+                        return;
+                    }
+
+                    const firstRow = processedData[0];
+                    const headers = [];
+                    // Manual Object.keys replacement
+                    for (var key in firstRow) {
+                        if (firstRow.hasOwnProperty(key)) {
+                            headers.push(key);
+                        }
+                    }
+                    
+                    const csvRows = [];
+                    csvRows.push(headers.join(','));
+                    
+                    for (let i = 0; i < processedData.length; i++) {
+                        const row = processedData[i];
+                        const values = [];
+                        
+                        for (let j = 0; j < headers.length; j++) {
+                            const header = headers[j];
+                            let value = row[header];
+                            
+                            // SAFE conversion to string
+                            if (value === null || value === undefined) {
+                                value = '';
+                            } else {
+                                value = String(value);
+                            }
+                            
+                            // Check for commas using indexOf - NO INCLUDES
+                            const needsQuotes = value.indexOf(',') !== -1 || value.indexOf('"') !== -1 || value.indexOf('\n') !== -1;
+                            
+                            if (needsQuotes) {
+                                let escaped = '';
+                                for (let k = 0; k < value.length; k++) {
+                                    const char = value[k];
+                                    escaped += char === '"' ? '""' : char;
+                                }
+                                values.push('"' + escaped + '"');
+                            } else {
+                                values.push(value);
+                            }
+                        }
+                        
+                        csvRows.push(values.join(','));
+                    }
+                    
+                    setFinalOutput(csvRows.join('\n'));
+                    setStep(5);
+                    console.log('CSV generation completed successfully');
+                    
+                } catch (error) {
+                    console.error('Error in confirmProcessing:', error);
+                    alert('Error generating CSV: ' + error.message);
+                }
             };
 
             const resetTool = () => {
@@ -258,12 +346,18 @@
                                         h('input', {
                                             key: "checkbox",
                                             type: "checkbox",
-                                            checked: associatedBrands.includes(brand),
+                                            checked: associatedBrands.indexOf(brand) !== -1,
                                             onChange: (e) => {
                                                 if (e.target.checked) {
                                                     setAssociatedBrands([...associatedBrands, brand]);
                                                 } else {
-                                                    setAssociatedBrands(associatedBrands.filter(b => b !== brand));
+                                                    const newBrands = [];
+                                                    for (let i = 0; i < associatedBrands.length; i++) {
+                                                        if (associatedBrands[i] !== brand) {
+                                                            newBrands.push(associatedBrands[i]);
+                                                        }
+                                                    }
+                                                    setAssociatedBrands(newBrands);
                                                 }
                                             },
                                             className: "h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
@@ -285,12 +379,18 @@
                                     h('input', {
                                         key: "checkbox",
                                         type: "checkbox",
-                                        checked: categoriesToRemove.includes('accounting'),
+                                        checked: categoriesToRemove.indexOf('accounting') !== -1,
                                         onChange: (e) => {
                                             if (e.target.checked) {
                                                 setCategoriesToRemove([...categoriesToRemove, 'accounting']);
                                             } else {
-                                                setCategoriesToRemove(categoriesToRemove.filter(c => c !== 'accounting'));
+                                                const newCategories = [];
+                                                for (let i = 0; i < categoriesToRemove.length; i++) {
+                                                    if (categoriesToRemove[i] !== 'accounting') {
+                                                        newCategories.push(categoriesToRemove[i]);
+                                                    }
+                                                }
+                                                setCategoriesToRemove(newCategories);
                                             }
                                         },
                                         className: "h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
@@ -302,12 +402,18 @@
                                     h('input', {
                                         key: "checkbox",
                                         type: "checkbox",
-                                        checked: categoriesToRemove.includes('law'),
+                                        checked: categoriesToRemove.indexOf('law') !== -1,
                                         onChange: (e) => {
                                             if (e.target.checked) {
                                                 setCategoriesToRemove([...categoriesToRemove, 'law']);
                                             } else {
-                                                setCategoriesToRemove(categoriesToRemove.filter(c => c !== 'law'));
+                                                const newCategories = [];
+                                                for (let i = 0; i < categoriesToRemove.length; i++) {
+                                                    if (categoriesToRemove[i] !== 'law') {
+                                                        newCategories.push(categoriesToRemove[i]);
+                                                    }
+                                                }
+                                                setCategoriesToRemove(newCategories);
                                             }
                                         },
                                         className: "h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
