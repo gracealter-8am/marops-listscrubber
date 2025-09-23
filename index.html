@@ -129,6 +129,14 @@
                         law: ['law', 'legal', 'attorney', 'lawyer', 'law firm', 'legal services', 'paralegal', 'counsel', 'solicitor', 'barrister', 'litigation', 'legal aid']
                     };
 
+                    // Define unmarketable domains
+                    const unmarketableDomains = [
+                        // Government domains
+                        '.gov', '.mil',
+                        // Educational domains
+                        '.edu', '.ac.uk', '.edu.au'
+                    ];
+
                     // Parse additional keywords - SAFE VERSION
                     const additionalKeywordsList = [];
                     if (additionalKeywords) {
@@ -186,9 +194,30 @@
                             }
                         }
                         
-                        // Random demo failures for other reasons (like unmarketable domains)
-                        if (!failReason && Math.random() > 0.7) {
-                            failReason = 'unmarketable email domain';
+                        // Check for unmarketable email domains
+                        if (!failReason && columnMappings.email) {
+                            const emailAddress = (row[columnMappings.email] || '').toString().toLowerCase();
+                            
+                            if (emailAddress) {
+                                // Extract domain from email
+                                const emailParts = emailAddress.split('@');
+                                if (emailParts.length === 2) {
+                                    const domain = emailParts[1];
+                                    
+                                    // Check if domain is in unmarketable list
+                                    let isUnmarketable = false;
+                                    for (let k = 0; k < unmarketableDomains.length; k++) {
+                                        if (domain === unmarketableDomains[k] || domain.indexOf(unmarketableDomains[k]) !== -1) {
+                                            isUnmarketable = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (isUnmarketable) {
+                                        failReason = 'unmarketable email domain';
+                                    }
+                                }
+                            }
                         }
                         
                         // Count fail reasons
@@ -661,7 +690,7 @@
                                 onClick: () => setStep(3),
                                 className: "px-6 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700"
                             }, "Back")
-                        ])
+                            ])
                     ])
                 ]);
             }
