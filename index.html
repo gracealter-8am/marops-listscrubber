@@ -158,66 +158,107 @@
                     }
 
                     const processed = [];
+                    const seenEmails = new Set(); // Track duplicates
+                    
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
-                        const companyName = (row[columnMappings.company] || '').toString().toLowerCase();
-                        const searchText = companyName;
+                        const firstName = (row[columnMappings.firstName] || '').toString().trim();
+                        const lastName = (row[columnMappings.lastName] || '').toString().trim();
+                        const companyName = (row[columnMappings.company] || '').toString().trim();
+                        const companyLower = companyName.toLowerCase();
+                        
+                        // Extract email once if column is mapped
+                        const emailAddress = columnMappings.email ? 
+                            (row[columnMappings.email] || '').toString().trim().toLowerCase() : '';
                         
                         let failReason = '';
                         
-                        // Check category exclusions
-                        if (categoriesToRemove.indexOf('accounting') !== -1) {
+                        // Phase 1: Essential data validation (blocking)
+                        if (!companyName) {
+                            failReason = 'no company name provided';
+                        } else if (columnMappings.email && !emailAddress) {
+                            failReason = 'no email provided';
+                        } else if (columnMappings.email && emailAddress) {
+                            // Validate email format
+                            if (emailAddress.indexOf('@') === -1 || 
+                                emailAddress.indexOf(' ') !== -1 || 
+                                emailAddress.indexOf('@@') !== -1 || 
+                                emailAddress.indexOf('@') === 0 || 
+                                emailAddress.indexOf('@') === emailAddress.length - 1) {
+                                failReason = 'invalid email format';
+                            } else {
+                                const emailParts = emailAddress.split('@');
+                                if (emailParts.length !== 2 || !emailParts[1] || emailParts[1].indexOf('.') === -1) {
+                                    failReason = 'invalid email format';
+                                } else if (seenEmails.has(emailAddress)) {
+                                    failReason = 'duplicate email address';
+                                }
+                            }
+                        }
+                        
+                        // Phase 2: Data quality checks (blocking)  
+                        if (!failReason) {
+                            // Check company name quality
+                            if (companyName.length <= 2) {
+                                failReason = 'junk company name';
+                            } else {
+                                // Check junk patterns
+                                for (let j = 0; j < junkCompanyPatterns.length; j++) {
+                                    if (junkCompanyPatterns[j].test(companyName)) {
+                                        failReason = 'junk company name';
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Phase 3: Email domain validation (blocking) - only if email column mapped
+                        if (!failReason && emailAddress) {
+                            const emailParts = emailAddress.split('@');
+                            if (emailParts.length === 2) {
+                                const domain = emailParts[1];
+                                
+                                for (let k = 0; k < unmarketableDomains.length; k++) {
+                                    if (domain === unmarketableDomains[k] || domain.indexOf(unmarketableDomains[k]) !== -1) {
+                                        failReason = 'unmarketable email domain';
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Phase 4: Category filtering (only on clean data) - matches original logic
+                        if (!failReason && categoriesToRemove.indexOf('accounting') !== -1) {
                             for (let j = 0; j < categoryKeywords.accounting.length; j++) {
-                                if (searchText.indexOf(categoryKeywords.accounting[j]) !== -1) {
+                                if (companyLower.indexOf(categoryKeywords.accounting[j]) !== -1) {
                                     failReason = 'accounting/finance category';
                                     break;
                                 }
                             }
                         }
                         
-                        if (categoriesToRemove.indexOf('law') !== -1) {
+                        if (!failReason && categoriesToRemove.indexOf('law') !== -1) {
                             for (let j = 0; j < categoryKeywords.law.length; j++) {
-                                if (searchText.indexOf(categoryKeywords.law[j]) !== -1) {
+                                if (companyLower.indexOf(categoryKeywords.law[j]) !== -1) {
                                     failReason = 'law/legal category';
                                     break;
                                 }
                             }
                         }
                         
-                        // Check additional keywords
+                        // Additional keywords
                         if (!failReason && additionalKeywordsList.length > 0) {
                             for (let j = 0; j < additionalKeywordsList.length; j++) {
-                                if (searchText.indexOf(additionalKeywordsList[j]) !== -1) {
+                                if (companyLower.indexOf(additionalKeywordsList[j]) !== -1) {
                                     failReason = 'additional keyword exclusion';
                                     break;
                                 }
                             }
                         }
                         
-                        // Check for unmarketable email domains
-                        if (!failReason && columnMappings.email) {
-                            const emailAddress = (row[columnMappings.email] || '').toString().toLowerCase();
-                            
-                            if (emailAddress) {
-                                // Extract domain from email
-                                const emailParts = emailAddress.split('@');
-                                if (emailParts.length === 2) {
-                                    const domain = emailParts[1];
-                                    
-                                    // Check if domain is in unmarketable list
-                                    let isUnmarketable = false;
-                                    for (let k = 0; k < unmarketableDomains.length; k++) {
-                                        if (domain === unmarketableDomains[k] || domain.indexOf(unmarketableDomains[k]) !== -1) {
-                                            isUnmarketable = true;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    if (isUnmarketable) {
-                                        failReason = 'unmarketable email domain';
-                                    }
-                                }
-                            }
+                        // Track valid emails for duplicate detection
+                        if (!failReason && emailAddress) {
+                            seenEmails.add(emailAddress);
                         }
                         
                         // Count fail reasons
@@ -338,19 +379,19 @@
                     h('div', { key: "content", className: "space-y-6" }, [
                         h('h2', { key: "title", className: "text-xl font-semibold" }, "Step 1: List Details"),
                         
-                        // Blue info box
                         h('div', { key: "info", className: "bg-blue-50 border border-blue-200 rounded-md p-4" }, [
                             h('h3', { key: "h3", className: "font-medium text-blue-900 mb-2" }, "How We'll Clean Up Your List"),
                             h('div', { key: "content", className: "text-blue-800 text-sm space-y-2" }, [
                                 h('ul', { key: "list", className: "list-disc list-inside space-y-1" }, [
-                                    h('li', { key: "1" }, "Remove contacts that are ", h('strong', {}, "unmarketable"), " (government emails, educational institutions, etc.)"),
-                                    h('li', { key: "2" }, "Fix ", h('strong', {}, "formatting issues"), " like inconsistent capitalization and phone number formats"),
-                                    h('li', { key: "3" }, "Remove ", h('strong', {}, "duplicate leads")),
-                                    h('li', { key: "4" }, "Flag any leads that are ", h('strong', {}, "missing important information"), " like email or company name")
+                                    h('li', { key: "1" }, "Remove ", h('strong', {}, "junk/test data"), " (missing emails, invalid formats, test companies like 'ABC Corp', 'Demo Inc')"),
+                                    h('li', { key: "2" }, "Remove contacts with ", h('strong', {}, "unmarketable domains"), " (.gov, .org, .edu, .mil, etc.)"),
+                                    h('li', { key: "3" }, "Remove ", h('strong', {}, "duplicate email addresses"), " (keeps first occurrence)"),
+                                    h('li', { key: "4" }, "Filter out specified ", h('strong', {}, "industry categories"), " and custom keywords"),
+                                    h('li', { key: "5" }, "Flag entries with ", h('strong', {}, "data quality issues"), " (1-2 letter company names, placeholder text)")
                                 ]),
                                 h('p', { key: "summary", className: "mt-3 pt-2 border-t border-blue-200" }, 
-                                    "By the end, you'll have a ", h('strong', {}, "clean, organized list of qualified prospects"), 
-                                    " ready for your ", h('strong', {}, "Marketo/Salesforce import"), "."
+                                    "Result: a ", h('strong', {}, "clean, validated list"), " of genuine business prospects ready for ", 
+                                    h('strong', {}, "Marketo/Salesforce import"), " with comprehensive junk data removal."
                                 )
                             ])
                         ]),
