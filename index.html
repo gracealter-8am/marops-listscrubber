@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -136,6 +136,13 @@
                         // Educational domains
                         '.edu', '.ac.uk', '.edu.au'
                     ];
+                    // Junk company name patterns  ← ADD IT HERE
+                    const junkCompanyPatterns = [
+                        /^(test|sample|demo|temp|placeholder|example|dummy|n\/a|na|none|tbd|xxx|asdf|qwerty)/i,
+                        /^(abc|xyz|123)\s+(corp|inc|llc|company|co)$/i,
+                        /^[-_\.]+$/,
+                        /^\d+$/
+                    ];
 
                     // Parse additional keywords - SAFE VERSION
                     const additionalKeywordsList = [];
@@ -222,6 +229,7 @@
                                     if (domain === unmarketableDomains[k] || domain.indexOf(unmarketableDomains[k]) !== -1) {
                                         failReason = 'unmarketable email domain';
                                         break;
+                                        
                                     }
                                 }
                             }
